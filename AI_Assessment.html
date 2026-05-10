@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Skills Maturity Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a40;
+    --accent: #7c5cfc;
+    --accent2: #00e5c4;
+    --accent3: #ff6b6b;
+    --text: #e8e8f0;
+    --muted: #6b6b88;
+    --selected-bg: rgba(124,92,252,0.15);
+    --selected-border: #7c5cfc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid bg */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(124,92,252,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124,92,252,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 56px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border: 1px solid rgba(0,229,196,0.3);
+    padding: 4px 12px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #e8e8f0 30%, #7c5cfc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 16px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.7;
+    max-width: 520px;
+  }
+
+  /* Progress bar */
+  .progress-wrap {
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  /* Category */
+  .category {
+    display: none;
+  }
+  .category.active {
+    display: block;
+    animation: fadeSlide 0.35s ease;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .cat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .cat-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .cat-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Question */
+  .question {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: border-color 0.2s;
+  }
+
+  .question.answered {
+    border-color: rgba(124,92,252,0.4);
+  }
+
+  .q-label {
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .q-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .option {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    background: transparent;
+  }
+
+  .option:hover {
+    border-color: var(--accent);
+    background: rgba(124,92,252,0.06);
+  }
+
+  .option.selected {
+    border-color: var(--selected-border);
+    background: var(--selected-bg);
+  }
+
+  .option-dot {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.18s;
+    position: relative;
+  }
+
+  .option.selected .option-dot {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .option.selected .option-dot::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    background: white;
+    border-radius: 50%;
+  }
+
+  .option-score {
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: auto;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .option.selected .option-score {
+    color: var(--accent2);
+  }
+
+  .option-text {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    transition: color 0.18s;
+  }
+
+  .option.selected .option-text {
+    color: var(--text);
+  }
+
+  /* Navigation */
+  .nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    padding: 12px 28px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .btn-ghost:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 0 24px rgba(124,92,252,0.3);
+  }
+
+  .btn-primary:hover {
+    background: #9070ff;
+    box-shadow: 0 0 32px rgba(124,92,252,0.5);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  .nav-meta {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* Result */
+  #result {
+    display: none;
+  }
+
+  #result.active {
+    display: block;
+    animation: fadeSlide 0.4s ease;
+  }
+
+  .result-score-wrap {
+    text-align: center;
+    padding: 64px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .result-score-wrap::before {
+    content: '';
+    position: absolute;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(124,92,252,0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  .result-label {
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .result-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 96px;
+    font-weight: 800;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .result-max {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .result-level {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .result-desc {
+    font-size: 12px;
+    color: var(--muted);
+    max-width: 440px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Category breakdown */
+  .breakdown {
+    margin-bottom: 32px;
+  }
+
+  .breakdown-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .breakdown-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .breakdown-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .breakdown-name {
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .breakdown-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .breakdown-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 1s ease 0.3s;
+  }
+
+  .breakdown-score {
+    font-size: 11px;
+    color: var(--accent2);
+    white-space: nowrap;
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  /* Validation msg */
+  .validate-msg {
+    font-size: 11px;
+    color: var(--accent3);
+    letter-spacing: 1px;
+    display: none;
+  }
+  .validate-msg.show { display: block; }
+
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="badge">Self Assessment · 2026</div>
+    <h1>AI Skills<br>Maturity Index</h1>
+    <p class="subtitle">20 questions across 5 dimensions. Discover your AI fluency level and where to grow next.</p>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label" id="progressLabel">0 / 20 answered</div>
+  </div>
+
+  <div id="assessment">
+
+    <!-- CATEGORY 1 -->
+    <div class="category active" id="cat-0" data-cat="0">
+      <div class="cat-header">
+        <span class="cat-number">01 / 05</span>
+        <span class="cat-title">AI Awareness & Understanding</span>
+      </div>
+
+      <div class="question" id="q0">
+        <div class="q-label">Q1</div>
+        <div class="q-text">How familiar are you with Generative AI tools like ChatGPT, Gemini, or Claude?</div>
+        <div class="options" data-q="0"></div>
+      </div>
+      <div class="question" id="q1">
+        <div class="q-label">Q2</div>
+        <div class="q-text">How well do you understand what AI can and cannot do?</div>
+        <div class="options" data-q="1"></div>
+      </div>
+      <div class="question" id="q2">
+        <div class="q-label">Q3</div>
+        <div class="q-text">How often do you follow AI-related news, trends, or updates?</div>
+        <div class="options" data-q="2"></div>
+      </div>
+      <div class="question" id="q3">
+        <div class="q-label">Q4</div>
+        <div class="q-text">How confident are you explaining AI basics to a colleague?</div>
+        <div class="options" data-q="3"></div>
+      </div>
+    </div>
+
+    <!-- CATEGORY 2 -->
+    <div class="category" id="cat-1" data-cat="1">
+      <div class="cat-header">
+        <span class="cat-number">02 / 05</span>
+        <span class="cat-title">Personal AI Usage</span>
+      </div>
+
+      <div class="question" id="q4">
+        <div class="q-label">Q5</div>
+        <div class="q-text">How often do you use AI tools in your daily personal life?</div>
+        <div class="options" data-q="4"></div>
+      </div>
+      <div class="question" id="q5">
+        <div class="q-label">Q6</div>
+        <div class="q-text">Which best describes your prompting ability with AI tools?</div>
+        <div class="options" data-q="5"></div>
+      </div>
+      <div class="question" id="q6">
+        <div class="q-label">Q7</div>
+        <div class="q-text">How often do you use AI to save time on repetitive tasks?</div>
+        <div class="options" data-q="6"></div>
+      </div>
+      <div class="question" id="q7">
+        <div class="q-label">Q8</div>
+        <div class="q-text">How comfortable are you experimenting with new AI tools/apps?</div>
+        <div class="options" data-q="7"></div>
+      </div>
+    </div>
+
+    <!-- CATEGORY 3 -->
+    <div class="category" id="cat-2" data-cat="2">
+      <div class="cat-header">
+        <span class="cat-number">03 / 05</span>
+        <span class="cat-title">Workplace AI Adoption</span>
+      </div>
+
+      <div class="question" id="q8">
+        <div class="q-label">Q9</div>
+        <div class="q-text">How often do you use AI tools in your professional work?</div>
+        <div class="options" data-q="8"></div>
+      </div>
+      <div class="question" id="q9">
+        <div class="q-label">Q10</div>
+        <div class="q-text">How much productivity improvement have you personally experienced using AI?</div>
+        <div class="options" data-q="9"></div>
+      </div>
+      <div class="question" id="q10">
+        <div class="q-label">Q11</div>
+        <div class="q-text">How integrated is AI within your team or department?</div>
+        <div class="options" data-q="10"></div>
+      </div>
+      <div class="question" id="q11">
+        <div class="q-label">Q12</div>
+        <div class="q-text">How often do you recommend AI solutions to colleagues or stakeholders?</div>
+        <div class="options" data-q="11"></div>
+      </div>
+    </div>
+
+    <!-- CATEGORY 4 -->
+    <div class="category" id="cat-3" data-cat="3">
+      <div class="cat-header">
+        <span class="cat-number">04 / 05</span>
+        <span class="cat-title">AI Tools & Practical Skills</span>
+      </div>
+
+      <div class="question" id="q12">
+        <div class="q-label">Q13</div>
+        <div class="q-text">How many AI tools have you actively used?</div>
+        <div class="options" data-q="12"></div>
+      </div>
+      <div class="question" id="q13">
+        <div class="q-label">Q14</div>
+        <div class="q-text">Which best describes your use of AI outputs?</div>
+        <div class="options" data-q="13"></div>
+      </div>
+      <div class="question" id="q14">
+        <div class="q-label">Q15</div>
+        <div class="q-text">How comfortable are you verifying AI-generated information for accuracy?</div>
+        <div class="options" data-q="14"></div>
+      </div>
+      <div class="question" id="q15">
+        <div class="q-label">Q16</div>
+        <div class="q-text">Have you used AI for creating presentations, reports, visuals, or analysis?</div>
+        <div class="options" data-q="15"></div>
+      </div>
+    </div>
+
+    <!-- CATEGORY 5 -->
+    <div class="category" id="cat-4" data-cat="4">
+      <div class="cat-header">
+        <span class="cat-number">05 / 05</span>
+        <span class="cat-title">AI Strategy, Ethics & Future Readiness</span>
+      </div>
+
+      <div class="question" id="q16">
+        <div class="q-label">Q17</div>
+        <div class="q-text">How aware are you of AI risks like bias, hallucinations, plagiarism, or privacy concerns?</div>
+        <div class="options" data-q="16"></div>
+      </div>
+      <div class="question" id="q17">
+        <div class="q-label">Q18</div>
+        <div class="q-text">How prepared do you think your profession is for AI-driven changes?</div>
+        <div class="options" data-q="17"></div>
+      </div>
+      <div class="question" id="q18">
+        <div class="q-label">Q19</div>
+        <div class="q-text">How actively are you learning new AI skills for future career growth?</div>
+        <div class="options" data-q="18"></div>
+      </div>
+      <div class="question" id="q19">
+        <div class="q-label">Q20</div>
+        <div class="q-text">Which statement best reflects your current AI maturity?</div>
+        <div class="options" data-q="19"></div>
+      </div>
+    </div>
+
+    <div class="nav">
+      <button class="btn btn-ghost" id="btnPrev" onclick="navigate(-1)">← Back</button>
+      <div style="text-align:center">
+        <div class="nav-meta" id="catLabel">Section 1 of 5</div>
+        <div class="validate-msg" id="validateMsg">Answer all questions to continue</div>
+      </div>
+      <button class="btn btn-primary" id="btnNext" onclick="navigate(1)">Next →</button>
+    </div>
+
+  </div>
+
+  <!-- RESULT -->
+  <div id="result">
+    <div class="result-score-wrap">
+      <div class="result-label">Your AI Maturity Score</div>
+      <div class="result-score" id="rScore">—</div>
+      <div class="result-max">out of 100</div>
+      <div class="result-level" id="rLevel">—</div>
+      <div class="result-desc" id="rDesc">—</div>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-title">Score by Category</div>
+      <div id="breakdownList"></div>
+    </div>
+
+    <div class="result-actions">
+      <button class="btn btn-ghost" onclick="restart()">Retake Assessment</button>
+      <button class="btn btn-primary" onclick="window.print()">Download PDF</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const questions = [
+  // Cat 1
+  { options: ["Never heard of them","Heard the names only","Tried once or twice","Use occasionally","Use frequently"] },
+  { options: ["No understanding","Very basic understanding","Moderate understanding","Good practical understanding","Strong understanding with real-world application awareness"] },
+  { options: ["Never","Rarely","Sometimes","Frequently","Daily / actively learning"] },
+  { options: ["Not confident","Slightly confident","Moderately confident","Confident","Very confident"] },
+  // Cat 2
+  { options: ["Never","Rarely","Sometimes","Frequently","Daily"] },
+  { options: ["I don't know how to write prompts","I use very basic prompts","I can get decent outputs","I structure prompts effectively","I create advanced multi-step prompts"] },
+  { options: ["Never","Rarely","Occasionally","Frequently","For most repetitive tasks"] },
+  { options: ["Not comfortable","Slightly comfortable","Moderately comfortable","Comfortable","Very comfortable / early adopter"] },
+  // Cat 3
+  { options: ["Never","Rarely","Sometimes","Frequently","Core part of daily work"] },
+  { options: ["No improvement","Minor improvement","Moderate improvement","Significant improvement","Transformational improvement"] },
+  { options: ["No AI usage","Very limited usage","Some experimentation","Regular adoption","AI embedded into workflows"] },
+  { options: ["Never","Rarely","Sometimes","Frequently","Regularly lead AI adoption discussions"] },
+  // Cat 4
+  { options: ["None","1 tool","2–3 tools","4–6 tools","7+ tools"] },
+  { options: ["Only simple answers","Content drafting","Research & summarization","Workflow automation","Strategic decision support"] },
+  { options: ["I never verify","Rarely verify","Sometimes verify","Frequently verify","Always validate critically"] },
+  { options: ["Never","Tried once","Occasionally","Frequently","Advanced usage across multiple formats"] },
+  // Cat 5
+  { options: ["Not aware","Slightly aware","Moderately aware","Well aware","Highly aware with practical understanding"] },
+  { options: ["Not prepared","Slightly prepared","Moderately prepared","Well prepared","Highly prepared"] },
+  { options: ["Not learning","Thinking about it","Learning occasionally","Learning regularly","Structured continuous learning"] },
+  { options: ["AI is confusing for me","I am exploring AI slowly","I use AI when needed","AI improves my productivity regularly","AI is central to how I work and think"] },
+];
+
+const catNames = [
+  "Awareness & Understanding",
+  "Personal AI Usage",
+  "Workplace AI Adoption",
+  "Tools & Practical Skills",
+  "Strategy & Future Readiness"
+];
+
+const maturity = [
+  { min: 91, level: "AI Transformation Leader", desc: "AI is central to how you think and work. You drive AI adoption and strategy at an organisational level." },
+  { min: 81, level: "AI Advanced Professional", desc: "You leverage AI meaningfully across your work and are actively shaping its use within your teams." },
+  { min: 61, level: "AI Practitioner", desc: "You use AI regularly and effectively. There's room to deepen strategic and advanced skill areas." },
+  { min: 41, level: "AI Explorer", desc: "You're experimenting with AI and building confidence. Consistent practice will accelerate your growth." },
+  { min: 0,  level: "AI Beginner", desc: "You're at the start of your AI journey. Start small — pick one tool and practise daily." }
+];
+
+let answers = new Array(20).fill(null);
+let currentCat = 0;
+
+// Build options
+document.querySelectorAll('.options').forEach(container => {
+  const qi = parseInt(container.dataset.q);
+  questions[qi].options.forEach((text, i) => {
+    const score = i + 1;
+    const el = document.createElement('div');
+    el.className = 'option';
+    el.dataset.qi = qi;
+    el.dataset.score = score;
+    el.innerHTML = `
+      <div class="option-dot"></div>
+      <div class="option-text">${text}</div>
+      <div class="option-score">${score}</div>
+    `;
+    el.addEventListener('click', () => selectOption(qi, score, el));
+    container.appendChild(el);
+  });
+});
+
+function selectOption(qi, score, el) {
+  // deselect others in same group
+  document.querySelectorAll(`.option[data-qi="${qi}"]`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  answers[qi] = score;
+  document.getElementById(`q${qi}`).classList.add('answered');
+  updateProgress();
+}
+
+function updateProgress() {
+  const answered = answers.filter(a => a !== null).length;
+  document.getElementById('progressFill').style.width = (answered / 20 * 100) + '%';
+  document.getElementById('progressLabel').textContent = `${answered} / 20 answered`;
+}
+
+function navigate(dir) {
+  if (dir === 1) {
+    // validate current cat
+    const start = currentCat * 4;
+    const unanswered = answers.slice(start, start + 4).some(a => a === null);
+    if (unanswered) {
+      const msg = document.getElementById('validateMsg');
+      msg.classList.add('show');
+      setTimeout(() => msg.classList.remove('show'), 3000);
+      return;
+    }
+  }
+
+  if (dir === 1 && currentCat === 4) {
+    showResult();
+    return;
+  }
+
+  document.getElementById(`cat-${currentCat}`).classList.remove('active');
+  currentCat = Math.max(0, Math.min(4, currentCat + dir));
+  document.getElementById(`cat-${currentCat}`).classList.add('active');
+
+  document.getElementById('btnPrev').style.visibility = currentCat === 0 ? 'hidden' : 'visible';
+  document.getElementById('btnNext').textContent = currentCat === 4 ? 'Submit →' : 'Next →';
+  document.getElementById('catLabel').textContent = `Section ${currentCat + 1} of 5`;
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showResult() {
+  document.getElementById('assessment').style.display = 'none';
+  document.getElementById('result').classList.add('active');
+
+  const total = answers.reduce((s, a) => s + (a || 0), 0);
+  const score = Math.round(total / 20 * 20); // scale to 20–100
+
+  // Actually: score = sum of 20 questions each 1–5, max = 100
+  const rawScore = answers.reduce((s, a) => s + (a || 0), 0);
+
+  document.getElementById('rScore').textContent = rawScore;
+  const level = maturity.find(m => rawScore >= m.min);
+  document.getElementById('rLevel').textContent = level.level;
+  document.getElementById('rDesc').textContent = level.desc;
+
+  // Breakdown
+  const list = document.getElementById('breakdownList');
+  list.innerHTML = '';
+  for (let c = 0; c < 5; c++) {
+    const catScore = answers.slice(c * 4, c * 4 + 4).reduce((s, a) => s + (a || 0), 0);
+    const pct = Math.round(catScore / 20 * 100);
+    list.innerHTML += `
+      <div class="breakdown-item">
+        <div class="breakdown-info">
+          <div class="breakdown-name">${catNames[c]}</div>
+          <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${pct}%"></div></div>
+        </div>
+        <div class="breakdown-score">${catScore} / 20</div>
+      </div>
+    `;
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function restart() {
+  answers = new Array(20).fill(null);
+  currentCat = 0;
+  document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+  document.querySelectorAll('.question').forEach(q => q.classList.remove('answered'));
+  document.querySelectorAll('.category').forEach(c => c.classList.remove('active'));
+  document.getElementById('cat-0').classList.add('active');
+  document.getElementById('result').classList.remove('active');
+  document.getElementById('assessment').style.display = 'block';
+  document.getElementById('btnPrev').style.visibility = 'hidden';
+  document.getElementById('btnNext').textContent = 'Next →';
+  document.getElementById('catLabel').textContent = 'Section 1 of 5';
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Init
+document.getElementById('btnPrev').style.visibility = 'hidden';
+updateProgress();
+</script>
+</body>
+</html>
